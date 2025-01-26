@@ -20,11 +20,12 @@ class OfficeSpaceResource extends JsonResource
             'slug' => $this->slug,
             'duration' => $this->duration,
             'price' => $this->price,
+            'address' => $this->address,
             'thumbnail' => $this->thumbnail,
             'about' => $this->about,
             'city' => new CityResource($this->whenLoaded('city')),
             'photos' => OfficeSpacePhotoResource::collection($this->whenLoaded('photos')),
-            'benefits' => OfficeSpaceBenefitResource::collection($this->whenLoaded('benegits'))
+            'benefits' => OfficeSpaceBenefitResource::collection($this->whenLoaded('benefits'))
         ];
     }
 }
