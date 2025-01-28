@@ -85,10 +85,10 @@ class BookingTransactionResource extends Resource
                 Tables\Columns\IconColumn::make('is_paid')
                     ->label('Sudah bayar?')
                     ->boolean()
-                    ->trueColor('danger')
-                    ->falseColor('success')
-                    ->trueIcon('heroicon-o-x-circle')
-                    ->falseIcon('heroicon-o-check-circle')
+                    ->trueColor('success')
+                    ->falseColor('danger')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueIcon('heroicon-o-check-circle')
 
             ])
             ->filters([
