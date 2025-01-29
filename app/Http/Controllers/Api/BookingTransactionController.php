@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingTransactionRequest;
 use App\Http\Resources\Api\BookingTransactionResource;
+use App\Http\Resources\Api\ViewBookingResource;
 use App\Models\BookingTransaction;
 use App\Models\OfficeSpace;
 use Illuminate\Http\Request;
@@ -25,11 +26,30 @@ class BookingTransactionController extends Controller
             ->modify("+{$officeSpace->duration} days")
             ->format('Y-m-d');
         $bookingTransaction = BookingTransaction::create($validatedData);
-    
+
         // Mengirim notifikasi sms atau whatsapp dengan twilio
 
         // Mengembalikan response berhasil
         $bookingTransaction->load('officeSpace');
         return new BookingTransactionResource($bookingTransaction);
+    }
+
+    public function booking_details(Request $request)
+    {
+        $request->validate([
+            'booking_trx_id' => 'required|string|max:255',
+            'phone_number' => 'required|string|max:255',
+        ]);
+
+        $booking = BookingTransaction::where('booking_trx_id', $request->booking_trx_id)
+            ->where('phone_number', $request->phone_number)
+            ->with(['officeSpace','officeSpace.city'])
+            ->first();
+
+        if (!$booking) {
+            return response()->json(['message' => 'Booking not found'], 404);
+        }
+
+        return new ViewBookingResource($booking);
     }
 }
