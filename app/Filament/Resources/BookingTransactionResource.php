@@ -7,11 +7,13 @@ use App\Filament\Resources\BookingTransactionResource\RelationManagers;
 use App\Models\BookingTransaction;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Twilio\Rest\Client;
 
 class BookingTransactionResource extends Resource
 {
@@ -96,6 +98,37 @@ class BookingTransactionResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                    ->label('approve')
+                    ->action(function (BookingTransaction $record) {
+                        $record->is_paid = true;
+                        $record->save();
+                        
+                        Notification::make()
+                        ->title('Booking Approved')
+                        ->success()
+                        ->body('The booking has been successfully approved.')
+                        ->send();
+
+                        $sId = getenv("TWILIO_ACCOUNT_SID");
+                        $token = getenv("TWILIO_AUTH_TOKEN");
+                        $twilio = new Client($sId, $token);
+
+                        $messageBody = "Hi {$record->name}, Pemesanan anda dengan kode {$record->booking_trx_id} sudah terbayar penuh.\n\n";
+                        $messageBody .= "Silahkan datang kepada lokasi kantor {$record->officeSpace->name} untuk mulai menggunakan ruangan kerja tersebut. \n\n";
+                        $messageBody .= "Jika anda memiliki pertanyaan silahkan menghubungi CS kami.";
+
+                        $message = $twilio->messages->create(
+                            "whatsapp:+6285860256937",
+                            [
+                                "body" => $messageBody,
+                                "from" => "whatsapp:".getenv("TWILIO_PHONE_NUMBER")
+                            ]
+                        );
+                    })
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn(BookingTransaction $record) => !$record->is_paid),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
